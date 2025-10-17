@@ -1,0 +1,840 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Blockchain Attendance Demo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --secondary-color: #1e40af;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --error-color: #ef4444;
+      --background-color: #f8fafc;
+      --card-background: #ffffff;
+    }
+    body { 
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 24px;
+      background-color: var(--background-color);
+      color: #1f2937;
+    }
+    .card { 
+      background: var(--card-background);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      transition: transform 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+    }
+    .card strong {
+      font-size: 1.1em;
+      color: var(--primary-color);
+      display: block;
+      margin-bottom: 15px;
+    }
+    label { 
+      display: block;
+      margin-top: 12px;
+      font-weight: 500;
+      color: #374151;
+    }
+    input, select { 
+      width: 100%;
+      padding: 10px 12px;
+      margin-top: 6px;
+      box-sizing: border-box;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.95em;
+      transition: border-color 0.2s ease;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    button { 
+      padding: 12px 20px;
+      margin-top: 15px;
+      cursor: pointer;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    button:hover {
+      background-color: var(--secondary-color);
+      transform: translateY(-1px);
+    }
+    .small { 
+      font-size: 0.9em;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+    #records { 
+      margin-top: 15px;
+    }
+    .record-item {
+      border-top: 1px solid #e5e7eb;
+      padding: 12px 0;
+      margin-top: 8px;
+    }
+    .record-item div {
+      margin: 6px 0;
+    }
+    .record-item strong {
+      color: #374151;
+      font-weight: 500;
+      display: inline;
+      font-size: inherit;
+      margin-right: 8px;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.85em;
+      font-weight: 500;
+    }
+    .status-success {
+      background-color: #ecfdf5;
+      color: var(--success-color);
+    }
+    .status-error {
+      background-color: #fef2f2;
+      color: var(--error-color);
+    }
+    pre { 
+      background: #f8fafc;
+      padding: 12px;
+      border-radius: 8px;
+      overflow: auto;
+      border: 1px solid #e5e7eb;
+    }
+    @media (max-width: 768px) {
+      body {
+        padding: 16px;
+      }
+      .card {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div style="text-align: center; margin-bottom: 40px;">
+    <h1 style="color: var(--primary-color); margin-bottom: 10px;">Blockchain Attendance System</h1>
+    <p class="small">A decentralized attendance management system powered by Ethereum blockchain</p>
+  </div>
+
+  <div class="card">
+    <strong>🔗 System Connection</strong>
+    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+      <button id="btnConnect" style="margin: 0;"><svg style="width: 20px; height: 20px; margin-right: 8px; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>Connect MetaMask</button>
+      <span id="addrDisplay" class="small" style="flex-grow: 1;"></span>
+    </div>
+    
+    <div style="background: #f8fafc; border-radius: 8px; padding: 15px;">
+      <label>Smart Contract Address</label>
+      <div style="display: flex; gap: 10px; margin-top: 6px;">
+        <input id="contractAddress" placeholder="Paste deployed contract address here" style="margin: 0;"/>
+        <button id="btnLoadContract" style="margin: 0; white-space: nowrap;">Load Contract</button>
+      </div>
+      <p id="loadStatus" class="small" style="margin-top: 8px; margin-bottom: 0;"></p>
+    </div>
+  </div>
+
+  <div class="card">
+    <strong>👤 Administrative Actions</strong>
+    <div style="display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+      <div>
+        <h3 style="color: #374151; margin: 0 0 15px 0;">Add Teacher</h3>
+        <label>Teacher's Ethereum Address</label>
+        <input id="teacherAddr" placeholder="0x... teacher address">
+        <button id="btnAddTeacher">Add Teacher</button>
+      </div>
+      <div>
+        <h3 style="color: #374151; margin: 0 0 15px 0;">Register Student</h3>
+        <label>Student's Ethereum Address</label>
+        <input id="studentAddr" placeholder="0x... student address">
+        <label>Student Roll Number</label>
+        <input id="studentRoll" placeholder="e.g., CS2025-001">
+        <button id="btnRegisterStudent">Register Student</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <strong>✍️ Attendance Management</strong>
+    <div style="background: #f8fafc; border-radius: 8px; padding: 20px; margin-bottom: 15px;">
+      <div style="display: grid; gap: 15px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        <div>
+          <label>Student Address</label>
+          <input id="markStudent" placeholder="0x... student address">
+        </div>
+        <div>
+          <label>Date</label>
+          <input id="markDate" type="date" placeholder="YYYY-MM-DD">
+        </div>
+        <div>
+          <label>Status</label>
+          <select id="markPresent">
+            <option value="true">Present ✅</option>
+            <option value="false">Absent ❌</option>
+          </select>
+        </div>
+        <div>
+          <label>Course Code</label>
+          <input id="markCourse" placeholder="e.g., CS701">
+        </div>
+      </div>
+      <button id="btnMark" style="width: 100%;">Record Attendance</button>
+      <p id="markStatus" class="small" style="margin: 10px 0 0 0;"></p>
+    </div>
+  </div>
+
+  <div class="card">
+    <strong>📊 Attendance Records</strong>
+    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+      <input id="viewStudent" placeholder="Enter student's Ethereum address" style="flex-grow: 1;">
+      <button id="btnView" style="margin-top: 6px;">View Records</button>
+    </div>
+    <div id="records"></div>
+  </div>
+
+  <div class="card" style="background: #f8fafc; margin-top: 30px;">
+    <p class="small" style="margin: 0;">
+      <strong style="color: var(--warning-color); display: inline;">⚠️ Important:</strong>
+      This system requires proper authentication. Owner functions are restricted to the contract owner's account, and attendance marking is limited to authorized teacher accounts.
+    </p>
+  </div>
+
+  <!-- Web3 CDN -->
+  <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.10.0/dist/web3.min.js"></script>
+
+  <script>
+  // === ABI (matches the provided Attendance.sol) ===
+  const ABI = [
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "student",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "date",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "bool",
+				"name": "present",
+				"type": "bool"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "teacher",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "course",
+				"type": "string"
+			}
+		],
+		"name": "AttendanceMarked",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "student",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "roll",
+				"type": "string"
+			}
+		],
+		"name": "StudentRegistered",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "teacher",
+				"type": "address"
+			}
+		],
+		"name": "TeacherAdded",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "teacher",
+				"type": "address"
+			}
+		],
+		"name": "TeacherRemoved",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_teacher",
+				"type": "address"
+			}
+		],
+		"name": "addTeacher",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_addr",
+				"type": "address"
+			}
+		],
+		"name": "checkIsStudent",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_addr",
+				"type": "address"
+			}
+		],
+		"name": "checkIsTeacher",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_student",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_index",
+				"type": "uint256"
+			}
+		],
+		"name": "getAttendanceByIndex",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "date",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "present",
+				"type": "bool"
+			},
+			{
+				"internalType": "address",
+				"name": "teacher",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "timestamp",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "course",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "blockNumber",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_student",
+				"type": "address"
+			}
+		],
+		"name": "getAttendanceCount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "isStudent",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "isTeacher",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_student",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_date",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "_present",
+				"type": "bool"
+			},
+			{
+				"internalType": "string",
+				"name": "_course",
+				"type": "string"
+			}
+		],
+		"name": "markAttendance",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_student",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "_roll",
+				"type": "string"
+			}
+		],
+		"name": "registerStudent",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_teacher",
+				"type": "address"
+			}
+		],
+		"name": "removeTeacher",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "studentRoll",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+]
+  let web3;
+  let account;
+  let contract;
+  let contractAddress = "0x52a314A59FEaB20Ddf321c5E074e63ec1E396695"; // will be set by user
+
+  async function connect() {
+    if (window.ethereum) {
+      try {
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        web3 = new Web3(window.ethereum);
+        const accounts = await web3.eth.getAccounts();
+        account = accounts[0];
+        document.getElementById('addrDisplay').innerText = 'Connected: ' + account;
+        console.log("Connected", account);
+      } catch (err) {
+        alert('Connection rejected');
+      }
+    } else {
+      alert('MetaMask not found. Install MetaMask and try again.');
+    }
+  }
+
+  document.getElementById('btnConnect').addEventListener('click', connect);
+
+  document.getElementById('btnLoadContract').addEventListener('click', async () => {
+    const addr = document.getElementById('contractAddress').value.trim();
+    if (!web3) { alert('Connect MetaMask first'); return; }
+    if (!web3.utils.isAddress(addr)) { alert('Invalid contract address'); return; }
+    contractAddress = addr;
+    contract = new web3.eth.Contract(ABI, contractAddress);
+    document.getElementById('loadStatus').innerText = 'Contract loaded at ' + contractAddress;
+  });
+
+  // Owner actions
+  document.getElementById('btnAddTeacher').addEventListener('click', async () => {
+    const t = document.getElementById('teacherAddr').value.trim();
+    if (!contract) { 
+      showNotification('❌ Please load the contract first', 'error');
+      return; 
+    }
+    if (!web3.utils.isAddress(t)) { 
+      showNotification('❌ Invalid teacher address', 'error');
+      return; 
+    }
+    try {
+      const btn = document.getElementById('btnAddTeacher');
+      btn.disabled = true;
+      btn.innerHTML = '<svg class="animate-spin" style="width: 20px; height: 20px; margin-right: 8px; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Adding teacher...';
+      
+      await contract.methods.addTeacher(t).send({ from: account });
+      document.getElementById('teacherAddr').value = '';
+      showNotification('✅ Teacher added successfully', 'success');
+    } catch (err) {
+      showNotification('❌ ' + (err.message || err).slice(0, 100), 'error');
+    } finally {
+      const btn = document.getElementById('btnAddTeacher');
+      btn.disabled = false;
+      btn.textContent = 'Add Teacher';
+    }
+  });
+
+  document.getElementById('btnRegisterStudent').addEventListener('click', async () => {
+    const s = document.getElementById('studentAddr').value.trim();
+    const r = document.getElementById('studentRoll').value.trim();
+    if (!contract) { alert('Load contract'); return; }
+    if (!web3.utils.isAddress(s)) { alert('Invalid student address'); return; }
+    try {
+      await contract.methods.registerStudent(s, r).send({ from: account });
+      alert('Student registered');
+    } catch (err) {
+      alert('Error: ' + (err.message || err));
+    }
+  });
+
+  // Mark attendance (teacher)
+  document.getElementById('btnMark').addEventListener('click', async () => {
+    const s = document.getElementById('markStudent').value.trim();
+    // Get the date in YYYY-MM-DD and convert to YYYYMMDD number
+    const dateInput = document.getElementById('markDate').value.trim();
+    let d = 0;
+    if (dateInput) {
+      d = Number(dateInput.replace(/-/g, ''));
+    }
+    const p = (document.getElementById('markPresent').value === 'true');
+    const c = document.getElementById('markCourse').value.trim();
+    const status = document.getElementById('markStatus');
+    status.innerText = '';
+    if (!contract) { alert('Load contract'); return; }
+    if (!web3.utils.isAddress(s)) { alert('Invalid student address'); return; }
+    if (!d || d < 19000101) { alert('Invalid date. Use YYYY-MM-DD'); return; }
+    try {
+      status.innerText = 'Sending transaction...';
+      await contract.methods.markAttendance(s, d, p, c).send({ from: account });
+      status.innerText = 'Attendance marked successfully';
+    } catch (err) {
+      status.innerText = 'Error: ' + (err.message || err);
+    }
+  });
+
+  // View attendance
+  document.getElementById('btnView').addEventListener('click', async () => {
+    const s = document.getElementById('viewStudent').value.trim();
+    const out = document.getElementById('records');
+    out.innerHTML = '<div class="status-badge" style="background: #dbeafe; color: var(--primary-color);"><svg style="width: 16px; height: 16px; margin-right: 4px; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Loading records...</div>';
+    if (!contract) { 
+      out.innerHTML = '<div class="status-badge status-error">Please load the contract first</div>';
+      return; 
+    }
+    if (!web3.utils.isAddress(s)) { 
+      out.innerHTML = '<div class="status-badge status-error">Invalid student address provided</div>';
+      return; 
+    }
+    try {
+      const count = await contract.methods.getAttendanceCount(s).call();
+      if (Number(count) === 0) {
+        out.innerHTML = '<div class="status-badge" style="background: #f3f4f6; color: #6b7280;">No attendance records found for this student</div>';
+        return;
+      }
+
+      let presentCount = 0;
+      let absentCount = 0;
+      let html = `<div style="margin-bottom: 20px;">
+        <h3 style="color: var(--primary-color); margin: 0 0 15px 0;">📊 Attendance Summary</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+          <div style="background: #ecfdf5; padding: 15px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.5em; color: var(--success-color); font-weight: bold;" id="totalRecords">${count}</div>
+            <div style="color: #047857; font-size: 0.9em;">Total Records</div>
+          </div>
+          <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; text-align: center;" id="presentCount">
+            <div style="font-size: 1.5em; color: var(--primary-color); font-weight: bold;">-</div>
+            <div style="color: var(--secondary-color); font-size: 0.9em;">Days Present</div>
+          </div>
+          <div style="background: #fff1f2; padding: 15px; border-radius: 8px; text-align: center;" id="absentCount">
+            <div style="font-size: 1.5em; color: var(--error-color); font-weight: bold;">-</div>
+            <div style="color: #be123c; font-size: 0.9em;">Days Absent</div>
+          </div>
+        </div>
+      </div>`;
+
+      html += '<div style="margin-top: 20px;"><h3 style="color: var(--primary-color); margin: 0 0 15px 0;">📝 Detailed Records</h3>';
+      
+      for (let i = 0; i < count; i++) {
+        const rec = await contract.methods.getAttendanceByIndex(s, i).call();
+        // Update counters
+        if(rec[1]) presentCount++; else absentCount++;
+        // Format date from YYYYMMDD to 'YYYY-MM-DD'
+        const dateStr = String(rec[0]);
+        const formattedDate = `${dateStr.substr(0,4)}-${dateStr.substr(4,2)}-${dateStr.substr(6,2)}`;
+        html += `<div class="record-item">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <span class="status-badge ${rec[1] ? 'status-success' : 'status-error'}" style="margin-right: 10px;">
+                ${rec[1] ? '✓ Present' : '✗ Absent'}
+              </span>
+              <strong>Course:</strong> ${rec[4]}
+            </div>
+            <div class="small">${formattedDate}</div>
+          </div>
+          <div style="margin-top: 8px;" class="small">
+            <strong>Teacher:</strong> ${rec[2].substr(0,6)}...${rec[2].substr(-4)}
+            <strong style="margin-left: 15px;">Block:</strong> ${rec[5]}
+            <strong style="margin-left: 15px;">Time:</strong> ${new Date(rec[3]*1000).toLocaleTimeString()}
+          </div>
+        </div>`;
+      }
+      html += '</div>';
+      out.innerHTML = html;
+      
+      // Update the counters after loading all records
+      document.querySelector('#presentCount div:first-child').textContent = presentCount;
+      document.querySelector('#absentCount div:first-child').textContent = absentCount;
+    } catch (err) {
+      out.innerHTML = 'Error: ' + (err.message || err);
+    }
+  });
+
+  // Utility function for showing notifications
+  function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `status-badge status-${type}`;
+    notification.style.position = 'fixed';
+    notification.style.top = '20px';
+    notification.style.right = '20px';
+    notification.style.padding = '12px 20px';
+    notification.style.zIndex = '1000';
+    notification.style.animation = 'slideIn 0.3s ease-out';
+    notification.innerHTML = message;
+    
+    // Add animation styles
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    document.body.appendChild(notification);
+    
+    // Animate out and remove
+    setTimeout(() => {
+      notification.style.animation = 'slideOut 0.3s ease-in';
+      setTimeout(() => notification.remove(), 300);
+    }, type === 'error' ? 5000 : 3000);
+  }
+
+  // Helper for loading states
+  function setButtonLoading(buttonId, isLoading, loadingText = 'Processing...', originalText) {
+    const btn = document.getElementById(buttonId);
+    if (!btn) return;
+    
+    btn.disabled = isLoading;
+    if (isLoading) {
+      btn.setAttribute('data-original-text', btn.textContent);
+      btn.innerHTML = `<svg class="animate-spin" style="width: 20px; height: 20px; margin-right: 8px; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>${loadingText}`;
+    } else {
+      btn.textContent = originalText || btn.getAttribute('data-original-text');
+    }
+  }
+
+  // Date input formatting
+  document.getElementById('markDate').addEventListener('change', function(e) {
+    const date = e.target.value;
+    if (date) {
+      const formatted = date.replace(/-/g, '');
+      e.target.setAttribute('data-formatted-date', formatted);
+    }
+  });
+
+  // Auto-detect account changes
+  if (window.ethereum) {
+    window.ethereum.on('accountsChanged', function (accounts) {
+      account = accounts[0];
+      if (account) {
+        document.getElementById('addrDisplay').innerHTML = `
+          <span style="background: #f0f9ff; padding: 6px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px;">
+            <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Connected: ${account.substring(0, 6)}...${account.substring(38)}
+          </span>`;
+      } else {
+        document.getElementById('addrDisplay').innerText = '';
+      }
+    });
+  }
+  </script>
+  
+  <!-- Add animation styles -->
+  <style>
+    .animate-spin {
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</body>
+</html>
